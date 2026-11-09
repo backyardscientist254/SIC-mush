@@ -31,7 +31,7 @@ HTML_TEMPLATE = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🍄 Agaricus Pro - Button Mushroom Assistant</title>
+    <title>🍄 Mush AI - Button Mushroom Assistant</title>
     <style>
         :root {
             --bg-main: #090d16;
@@ -78,28 +78,7 @@ HTML_TEMPLATE = """
             box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
         }
         .brand-text h1 { font-size: 1.15rem; font-weight: 700; letter-spacing: -0.01em; }
-        .brand-text p { font-size: 0.75rem; color: var(--accent); display: flex; align-items: center; gap: 6px; margin-top: 2px;}
-        .status-dot { width: 7px; height: 7px; background-color: var(--accent); border-radius: 50%; box-shadow: 0 0 8px var(--accent); }
-
-        .dashboard-banner {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            padding: 16px 24px;
-            background-color: var(--bg-surface);
-            border-bottom: 1px solid var(--border);
-        }
-
-        .stat-card {
-            background: var(--bg-card);
-            padding: 10px 14px;
-            border-radius: 10px;
-            border: 1px solid var(--border);
-            text-align: left;
-        }
-
-        .stat-card span { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 2px;}
-        .stat-card strong { font-size: 0.95rem; color: var(--accent); font-weight: 600; }
+        .brand-text p { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
 
         .chat-container {
             flex: 1;
@@ -210,7 +189,6 @@ HTML_TEMPLATE = """
 
         @media (max-width: 768px) {
             body { border: none; height: 100vh; }
-            .dashboard-banner { grid-template-columns: 1fr; gap: 8px; padding: 12px 16px; }
             .message { max-width: 90%; }
         }
     </style>
@@ -221,26 +199,11 @@ HTML_TEMPLATE = """
         <div class="brand">
             <div class="brand-icon">🍄</div>
             <div class="brand-text">
-                <h1>Agaricus Pro Agronomist</h1>
-                <p><span class="status-dot"></span> Button Mushroom Expert Online</p>
+                <h1>Mush AI</h1>
+                <p>Your button mushroom expert online</p>
             </div>
         </div>
     </header>
-
-    <div class="dashboard-banner">
-        <div class="stat-card">
-            <span>Spawn Run / Pinning Temp</span>
-            <strong>24°C ➔ 16-18°C Shock</strong>
-        </div>
-        <div class="stat-card">
-            <span>Casing Humidity Target</span>
-            <strong>90% - 95% RH</strong>
-        </div>
-        <div class="stat-card">
-            <span>Pinning CO2 Level</span>
-            <strong>< 1000 PPM</strong>
-        </div>
-    </div>
 
     <div class="chat-container" id="chat">
         <div class="message bot-message">
@@ -378,7 +341,6 @@ def chat_stream():
                             delta = chunk_json.get("choices", [{}])[0].get("delta", {})
                             content = delta.get("content")
                             if content:
-                                # Fallback regex filter to strip out any stray markdown asterisks or hash headers
                                 clean_content = re.sub(r'[*#_`]', '', content)
                                 yield clean_content
                         except json.JSONDecodeError:
