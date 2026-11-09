@@ -1,5 +1,5 @@
 import os
-import sys
+import re
 import json
 import urllib.request
 import urllib.error
@@ -7,7 +7,7 @@ from flask import Flask, render_template_string, request, Response
 
 app = Flask(__name__)
 
-# Use OpenRouter API Key (supports local environment or platform env vars)
+# Use OpenRouter API Key
 API_KEY = os.environ.get("OPENROUTER_API_KEY")
 if not API_KEY:
     print("WARNING: OPENROUTER_API_KEY environment variable is not set!")
@@ -20,7 +20,9 @@ SYSTEM_INSTRUCTION = (
     "Provide concise, practical, and highly direct advice tailored strictly to button mushrooms. "
     "Focus on compost preparation (Phase I & II), casing layer management (peat moss/lime), "
     "temperature drops for pinning (16-18°C), moisture control, and common diseases like Wet Bubble (Mycogone) "
-    "and Bacterial Blotch. Keep answers short, structured with quick bullet points, and farmer-friendly."
+    "and Bacterial Blotch. "
+    "CRITICAL FORMATTING RULE: Output strictly in clean, plain text paragraphs and simple lists. "
+    "NEVER use markdown formatting, asterisks (*), hash characters (#), backticks, or bold/italic markers."
 )
 
 HTML_TEMPLATE = """
@@ -79,7 +81,6 @@ HTML_TEMPLATE = """
         .brand-text p { font-size: 0.75rem; color: var(--accent); display: flex; align-items: center; gap: 6px; margin-top: 2px;}
         .status-dot { width: 7px; height: 7px; background-color: var(--accent); border-radius: 50%; box-shadow: 0 0 8px var(--accent); }
 
-        /* Environmental Metrics Bar */
         .dashboard-banner {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -100,7 +101,6 @@ HTML_TEMPLATE = """
         .stat-card span { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 2px;}
         .stat-card strong { font-size: 0.95rem; color: var(--accent); font-weight: 600; }
 
-        /* Chat Workspace */
         .chat-container {
             flex: 1;
             overflow-y: auto;
@@ -138,7 +138,6 @@ HTML_TEMPLATE = """
             border-bottom-left-radius: 4px;
         }
 
-        /* Interactive Stage Chips */
         .presets {
             display: flex;
             gap: 10px;
@@ -169,7 +168,6 @@ HTML_TEMPLATE = """
             background-color: rgba(16, 185, 129, 0.05);
         }
 
-        /* Input Panel */
         .input-area {
             padding: 16px 24px;
             background-color: var(--bg-surface);
@@ -350,7 +348,7 @@ def chat_stream():
         "messages": messages,
         "stream": True,
         "temperature": 0.3,
-        "max_tokens": 2048  # Expanded to prevent mid-sentence cut-offs
+        "max_tokens": 2048
     }
 
     req_data = json.dumps(payload).encode("utf-8")
@@ -380,7 +378,9 @@ def chat_stream():
                             delta = chunk_json.get("choices", [{}])[0].get("delta", {})
                             content = delta.get("content")
                             if content:
-                                yield content
+                                # Fallback regex filter to strip out any stray markdown asterisks or hash headers
+                                clean_content = re.sub(r'[*#_`]', '', content)
+                                yield clean_content
                         except json.JSONDecodeError:
                             continue
         except urllib.error.HTTPError as e:
@@ -391,6 +391,5 @@ def chat_stream():
     return Response(generate(), mimetype="text/plain")
 
 if __name__ == "__main__":
-    # Uses port 5000 by default, respects $PORT for cloud deployment (Render/Railway)
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False)
